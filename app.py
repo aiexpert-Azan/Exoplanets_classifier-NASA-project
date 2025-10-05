@@ -17,12 +17,20 @@ st.write("Upload a NASA KOI/TOI/K2 catalog CSV or enter values manually below.")
 # -------------------------------
 try:
     artifact = joblib.load("model.joblib")
-    pipeline = artifact.get("pipeline")
-    saved_features = artifact.get("features", [])
-    label_map = artifact.get("label_map", {"0": "FALSE_POSITIVE", "1": "CANDIDATE", "2": "CONFIRMED"})
+
+    if isinstance(artifact, dict):
+        pipeline = artifact.get("pipeline")
+        saved_features = artifact.get("features", [])
+        label_map = artifact.get("label_map", {"0": "FALSE_POSITIVE", "1": "CANDIDATE", "2": "CONFIRMED"})
+    else:
+        pipeline = artifact
+        saved_features = getattr(pipeline, "feature_names_in_", [])
+        label_map = {"0": "FALSE_POSITIVE", "1": "CANDIDATE", "2": "CONFIRMED"}
+
 except Exception as e:
-    st.error("⚠️ Could not load model.joblib. Make sure you trained it first.")
+    st.error(f"⚠️ Could not load model.joblib: {e}")
     st.stop()
+
 
 # Try to get feature order directly from pipeline if available
 if hasattr(pipeline, "feature_names_in_"):
